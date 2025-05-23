@@ -1,0 +1,12 @@
+
+vpcid=$(aws ec2 create-vpc \
+    --cidr-block 10.0.0.0/25 \
+    --tag-specifications 'ResourceType=vpc,Tags=[{Key=Name,Value=Script-Vpc}]' \
+    --query 'Vpc.VpcId' \
+    --output text)
+echo "VPC created: $vpcid"
+
+aws ec2 modify-vpc-attribute \
+    --vpc-id $vpcid \
+    --enable-dns-hostnames "{\"Value\":true}"
+    echo "DNS enabled."
