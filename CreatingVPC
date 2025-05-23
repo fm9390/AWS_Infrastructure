@@ -66,3 +66,37 @@ aws ec2 create-route \
 # Subnet Associations
 aws ec2 associate-route-table --subnet-id $pubsub1 --route-table-id $rtbpubid1
 echo "Public route table created and associated."
+
+
+# Create SSH Security Group for Bastion Host
+bastionsgid=$(aws ec2 create-security-group \
+  --group-name "Bastion SSH Security Group" \
+  --description "Allow SSH" \
+  --vpc-id $vpcid \
+  --query 'GroupId' \
+  --output text)
+echo "Security Group created: $bastionsgid"
+# Adding Ingress Rule for Bastion SG
+aws ec2 authorize-security-group-ingress \
+    --group-id $bastionsgid \
+    --protocol tcp \
+    --port 22 \
+    --cidr 0.0.0.0/0 
+
+# Adding Ingress Rule for Bastion SG
+aws ec2 authorize-security-group-ingress \
+    --group-id $bastionsgid \
+    --protocol tcp \
+    --port 80 \
+    --cidr 0.0.0.0/0 
+echo "SSH & HTTP rules added to Security Group."
+
+# Launch Bastion Host EC2
+aws ec2 run-instances \
+  --image-id $AMI \
+  --instance-type t3.micro \
+  --subnet-id $pubsub1 \
+  --key-name script \
+  --associate-public-ip-address \
+  --security-group-ids $bastionsgid \
+  --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value="Bastion Server"}]'
