@@ -91,6 +91,8 @@ aws ec2 authorize-security-group-ingress \
     --cidr 0.0.0.0/0 
 echo "SSH & HTTP rules added to Security Group."
 
+# Get dynamic AMI
+source ./get-latest-ami.sh
 # Launch Bastion Host EC2
 aws ec2 run-instances \
   --image-id $AMI \
