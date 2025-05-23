@@ -98,7 +98,38 @@ aws ec2 run-instances \
   --image-id $AMI \
   --instance-type t3.micro \
   --subnet-id $pubsub1 \
-  --key-name script \
+  --key-name vockey \
   --associate-public-ip-address \
   --security-group-ids $bastionsgid \
   --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value="Bastion Server"}]'
+
+# Create Security Group for Private Instance
+# Allow SSH only from Bastion/CIDR 
+privatesgid=$(aws ec2 create-security-group \
+  --group-name "Private Instance Security Group" \
+  --description "Allow SSH only from Bastion" \
+  --vpc-id $vpcid \
+  --query 'GroupId' \
+  --output text)
+
+aws ec2 authorize-security-group-ingress \
+    --group-id $privatesgid \
+    --protocol tcp \
+    --port 22 \
+    --source-group $bastiongid
+
+# Launch instance in private subnet
+aws ec2 run-instances \
+  --image-id $AMI \
+  --instance-type t3.micro \
+  --subnet-id $privsub1 \
+  --key-name vockey \
+  --security-group-ids $privatesgid \
+  --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value="Private Server"}]'
+
+  eipalloc=$(aws ec2 allocate-address \
+  --domain vpc \
+  --query 'AllocationId' \
+  --output text)
+
+  
